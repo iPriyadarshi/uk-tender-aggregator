@@ -1,113 +1,219 @@
 import type { OCDSRelease } from "@/lib/ocds/types";
 import type { IngestWindow, SourceAdapter } from "../types";
+
+import { chromium } from "playwright";
+import { Solver } from "@2captcha/captcha-solver";
+
 import { isAllowedByRobots } from "../robots";
-import { ingestFetch, sleep } from "../http";
+import { sleep } from "../http";
 
-// const SEARCH_URL = "https://etendersni.gov.uk/epps/quickSearchAction.do";
-const SEARCH_URL = "https://etendersni.gov.uk/epps/cft/listContracts.do";
+const START_URL =
+  "https://etendersni.gov.uk/epps/prepareCurrentOpportunities.do?currentType=cft";
 
-/**
- * eTendersNI has no public OCDS API. We fetch the public contract list HTML
- * and map rows to minimal OCDS-shaped releases for normalization.
- */
+const solver = new Solver(process.env.TWOCAPTCHA_API_KEY!);
+
 export const etendersNiAdapter: SourceAdapter = {
   source: "etenders_ni",
 
   async *fetchReleases(_window: IngestWindow) {
     void _window;
-    const allowed = await isAllowedByRobots(SEARCH_URL);
+
+    const allowed = await isAllowedByRobots(START_URL);
+
     if (!allowed) {
       console.warn("eTendersNI blocked by robots.txt — skipping");
       return;
     }
 
     const releases: OCDSRelease[] = [];
+
+    let browser;
+
     try {
-      const res = await ingestFetch(SEARCH_URL, {
-        headers: { Accept: "text/html" },
-        signal: AbortSignal.timeout(30000),
+      browser = await chromium.launch({
+        headless: true,
       });
-      if (!res.ok) throw new Error(`eTendersNI HTTP ${res.status}`);
-      const html = await res.text();
-      releases.push(...parseNiHtml(html));
+
+      const context = await browser.newContext({
+        userAgent:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125 Safari/537.36",
+        viewport: {
+          width: 1440,
+          height: 900,
+        },
+      });
+
+      const page = await context.newPage();
+
+      console.log("Opening eTendersNI...");
+
+      await page.goto(START_URL, {
+        waitUntil: "networkidle",
+        timeout: 120000,
+      });
+
+      // ---------------------------------------------------
+      // Detect reCAPTCHA
+      // ---------------------------------------------------
+
+      const sitekey = await page
+        .locator("[data-sitekey]")
+        .first()
+        .getAttribute("data-sitekey")
+        .catch(() => null);
+
+      if (sitekey) {
+        console.log("CAPTCHA detected, solving via 2Captcha...");
+
+        const result = await solver.recaptcha({
+          pageurl: START_URL,
+          googlekey: sitekey,
+        });
+
+        console.log("CAPTCHA solved");
+
+        // Inject token
+        await page.evaluate((token) => {
+          const textarea = document.getElementById(
+            "g-recaptcha-response"
+          ) as HTMLTextAreaElement | null;
+
+          if (textarea) {
+            textarea.value = token;
+          }
+
+          // Some sites keep it hidden
+          const hidden = document.querySelector(
+            '[name="g-recaptcha-response"]'
+          ) as HTMLTextAreaElement | null;
+
+          if (hidden) {
+            hidden.value = token;
+          }
+        }, result.data);
+
+        // Trigger callback if present
+        await page.evaluate(() => {
+          const win = window as any;
+
+          for (const key in win) {
+            const value = win[key];
+
+            if (
+              typeof value === "object" &&
+              value &&
+              value.callback
+            ) {
+              try {
+                value.callback();
+              } catch {}
+            }
+          }
+        });
+
+        // Submit / continue
+        await page.keyboard.press("Enter");
+
+        await page.waitForLoadState("networkidle", {
+          timeout: 120000,
+        });
+      }
+
+      // ---------------------------------------------------
+      // Scrape contracts table
+      // ---------------------------------------------------
+
+      await page.waitForSelector("table", {
+        timeout: 60000,
+      });
+
+      const tenders = await page.evaluate(() => {
+        const rows = Array.from(document.querySelectorAll("tr"));
+
+        return rows
+          .map((row) => {
+            const link = row.querySelector("a");
+
+            if (!link) return null;
+
+            const title = link.textContent?.trim();
+
+            const href = (link as HTMLAnchorElement).href;
+
+            if (!title || title.length < 5) {
+              return null;
+            }
+
+            if (!href.includes("cft")) {
+              return null;
+            }
+
+            return {
+              title,
+              href,
+            };
+          })
+          .filter(Boolean);
+      });
+
+      for (const tender of tenders.slice(0, 100) as any[]) {
+        releases.push({
+          ocid: `ocds-etendersni-${hashCode(tender.href)}`,
+
+          id: `ni-${hashCode(tender.href)}`,
+
+          date: new Date().toISOString(),
+
+          tag: ["tender"],
+
+          tender: {
+            title: decodeHtml(tender.title),
+
+            status: "active",
+
+            documents: [
+              {
+                url: tender.href,
+                documentType: "tenderNotice",
+              },
+            ],
+          },
+
+          parties: [
+            {
+              id: "ni-buyer",
+
+              name: "Northern Ireland Public Sector",
+
+              roles: ["buyer"],
+
+              address: {
+                countryName: "Northern Ireland",
+              },
+            },
+          ],
+
+          buyer: {
+            id: "ni-buyer",
+            name: "Northern Ireland Public Sector",
+          },
+        });
+      }
     } catch (e) {
-      console.warn("eTendersNI scrape failed:", e);
-      //   releases.push(...getNiSampleData());
+      console.warn("eTendersNI Playwright scrape failed:", e);
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
     }
 
-    if (releases.length > 0) yield releases;
+    if (releases.length > 0) {
+      yield releases;
+    }
+
     await sleep(2000);
   },
 };
-
-function parseNiHtml(html: string): OCDSRelease[] {
-  const releases: OCDSRelease[] = [];
-  const rowRegex =
-    /<tr[^>]*>[\s\S]*?<a[^>]+href="([^"]*cft[^"]*)"[^>]*>([^<]+)<\/a>[\s\S]*?<\/tr>/gi;
-  let match;
-  let i = 0;
-  while ((match = rowRegex.exec(html)) !== null && i < 100) {
-    const href = match[1].startsWith("http")
-      ? match[1]
-      : `https://etendersni.gov.uk${match[1].startsWith("/") ? "" : "/"}${match[1]}`;
-    const title = decodeHtml(match[2].trim());
-    if (title.length < 5) continue;
-    releases.push({
-      ocid: `ocds-etendersni-${hashCode(href)}`,
-      id: `ni-${hashCode(href)}`,
-      date: new Date().toISOString(),
-      tag: ["tender"],
-      tender: {
-        title,
-        status: "active",
-        documents: [{ url: href, documentType: "tenderNotice" }],
-      },
-      parties: [
-        {
-          id: "ni-buyer",
-          name: "Northern Ireland Public Sector",
-          roles: ["buyer"],
-          address: { countryName: "Northern Ireland" },
-        },
-      ],
-      buyer: { id: "ni-buyer", name: "Northern Ireland Public Sector" },
-    });
-    i++;
-  }
-  return releases;
-}
-
-// function getNiSampleData(): OCDSRelease[] {
-//   return [
-//     {
-//       ocid: "ocds-etendersni-sample-1",
-//       id: "ni-sample-1",
-//       date: new Date().toISOString(),
-//       tag: ["tender"],
-//       tender: {
-//         title: "NI Public Sector — verify live scrape in production",
-//         status: "active",
-//         tenderPeriod: {
-//           endDate: new Date(Date.now() + 14 * 86400000).toISOString(),
-//         },
-//         documents: [
-//           {
-//             url: "https://etendersni.gov.uk/epps/cft/listContracts.do",
-//             documentType: "tenderNotice",
-//           },
-//         ],
-//       },
-//       buyer: { name: "Department of Finance NI" },
-//       parties: [
-//         {
-//           roles: ["buyer"],
-//           name: "Department of Finance NI",
-//           address: { countryName: "Northern Ireland" },
-//         },
-//       ],
-//     },
-//   ];
-// }
 
 function decodeHtml(s: string) {
   return s
@@ -119,6 +225,10 @@ function decodeHtml(s: string) {
 
 function hashCode(s: string) {
   let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
+
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i);
+  }
+
   return Math.abs(h).toString(16);
 }
