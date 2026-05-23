@@ -31,18 +31,11 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(
-    `Database: ${isLocalDatabase(url) ? "local Postgres (TCP)" : "Neon (HTTP)"}`,
-  );
-
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
-  console.log(
-    `Backfilling ${days} days (${from.toISOString()} → ${to.toISOString()})`,
-  );
+
 
   const results = await runIngestion(sources, { from, to });
-  console.log(JSON.stringify(results, null, 2));
 }
 
 main().catch((e) => {

@@ -18,7 +18,6 @@ async function main() {
 
   try {
     await sql.unsafe(migration);
-    console.log("Migration applied successfully");
   } finally {
     await sql.end();
   }

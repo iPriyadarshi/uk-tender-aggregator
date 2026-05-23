@@ -22,8 +22,6 @@ export const sell2walesAdapter: SourceAdapter = {
           // API returns OCDS ReleasePackage format with releases array
           if (pkg && Array.isArray(pkg.releases) && pkg.releases.length > 0) {
             yield pkg.releases;
-          } else {
-            console.log(`[sell2wales] No releases in package for ${dateFrom} type ${noticeType}`);
           }
         } catch (e) {
           console.error(
@@ -42,7 +40,6 @@ export const sell2walesAdapter: SourceAdapter = {
 
 function buildDateFromCandidates(dateFrom: string): string[] {
   // Official API format is MM-YYYY (e.g., 04-2019)
-  // dateFrom is already in MM-YYYY format from enumerateMonths
   return [dateFrom];
 }
 
@@ -53,7 +50,6 @@ async function fetchWithDateFromCandidates(
   let lastError: unknown;
   for (const candidate of buildDateFromCandidates(dateFrom)) {
     const url = `${API_BASE}?dateFrom=${encodeURIComponent(candidate)}&noticeType=${noticeType}&outputType=0&locale=2057`;
-    console.log(`[sell2wales] GET ${url}`);
     try {
       return await withBackoff(() => fetchJson<OCDSReleasePackage>(url));
     } catch (e) {
