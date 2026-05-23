@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UK Government Contracts Platform
 
-## Getting Started
+Unified ingestion and dashboard for UK public procurement across **England, Scotland, Wales, and Northern Ireland**.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```mermaid
+flowchart LR
+  FTS[Find a Tender OCDS] --> Norm[Normalizer]
+  CF[Contracts Finder] --> Norm
+  PCS[Public Contracts Scotland] --> Norm
+  S2W[Sell2Wales] --> Norm
+  NI[eTendersNI scrape] --> Norm
+  Norm --> PG[(Postgres / Neon)]
+  PG --> API[Next.js API]
+  API --> UI[Dashboard]
+  Cron[Vercel Cron daily] --> Norm
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend:** Next.js 14, TypeScript, Tailwind, shadcn-style components, Recharts
+- **Backend:** Next.js API routes (monolith)
+- **Database:** Postgres via Neon + Drizzle ORM
+- **Ingestion:** OCDS APIs (FTS, Contracts Finder, PCS, Sell2Wales) + HTML scrape (eTendersNI)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick start
 
-## Learn More
+```bash
+cd uk-gov-contracts
+cp .env.example .env.local
+# Set DATABASE_URL (Neon) and CRON_SECRET
 
-To learn more about Next.js, take a look at the following resources:
+npm install
+npm run db:migrate
+npm run ingest:backfill -- --days=30
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Ingest specific sources
 
-## Deploy on Vercel
+```bash
+npm run ingest:fts
+npm run ingest:cf
+npm run ingest:backfill -- --days=30 --sources=pcs,sell2wales
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Portal coverage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [docs/coverage.md](docs/coverage.md).
+
+| Source                    | Nation                    | Method                                  |
+| ------------------------- | ------------------------- | --------------------------------------- |
+| Find a Tender             | UK-wide                   | OCDS release packages API               |
+| Contracts Finder          | England / below-threshold | OCDS search API (cursor)                |
+| Public Contracts Scotland | Scotland                  | OCDS `/v1/Notices`                      |
+| Sell2Wales                | Wales                     | OCDS API + bulk download fallback       |
+| eTendersNI                | Northern Ireland          | Public HTML list (robots.txt respected) |
+
+## Unified schema
+
+| Field      | Notes                                          |
+| ---------- | ---------------------------------------------- |
+| `id`       | `sha256(source:ocid:releaseId)`                |
+| Dates      | ISO 8601 UTC timestamps                        |
+| Values     | Numeric + ISO 4217 currency                    |
+| `nation`   | england, scotland, wales, northern_ireland, uk |
+| `raw_ocds` | Full release JSONB for audit                   |
+
+## API
+
+| Endpoint                           | Description                            |
+| ---------------------------------- | -------------------------------------- |
+| `GET /api/opportunities`           | List with filters                      |
+| `GET /api/opportunities/:id`       | Detail                                 |
+| `GET /api/stats`                   | Chart aggregates                       |
+| `GET /api/export?format=csv\|json` | Filtered export                        |
+| `GET /api/export/ocds`             | OCDS release package export (stretch)  |
+| `GET /api/cron/ingest`             | Daily ingestion (Bearer `CRON_SECRET`) |
+| `GET /api/health`                  | DB connectivity                        |
+
+## AI usage
+
+Documented in [docs/ai-usage.md](docs/ai-usage.md).
+
+## Metrics
+
+Documented in [docs/metrics.md](docs/metrics.md).
+
+## Ground rules compliance
+
+- Respects `robots.txt` (eTendersNI)
+- Exponential backoff on API failures
+- Identifying User-Agent
+- No login/paywall bypass - documented limitations in coverage doc
+- Dead-letter queue for permanent ingest errors
