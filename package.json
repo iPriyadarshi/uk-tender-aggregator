@@ -9,6 +9,8 @@
     "lint": "eslint",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:push": "drizzle-kit push",
+    "ingest:fts": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/backfill.ts --sources=fts",
+    "ingest:cf": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/backfill.ts --sources=contracts_finder",
     "ingest:backfill": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/backfill.ts",
     "ingest:once": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/backfill.ts --days=2"
   },
