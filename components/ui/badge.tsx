@@ -21,8 +21,8 @@ const badgeVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
 
         // ✅ Custom variants
-        success: "bg-green-500 text-white",
-        warning: "bg-yellow-400 text-black",
+        success: "bg-[#1f6f63] text-[#fff8f6]",
+        warning: "bg-[#f6c7b6] text-[#5b372f]",
       },
     },
     defaultVariants: {

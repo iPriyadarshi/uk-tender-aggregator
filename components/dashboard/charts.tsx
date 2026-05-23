@@ -47,37 +47,37 @@ export function DashboardCharts({ stats }: { stats: Stats }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <div className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm">
-        <h3 className="mb-4 text-sm font-medium text-zinc-900">
+      <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-card)] p-4 shadow-[0_18px_40px_rgba(37,25,22,0.08)]">
+        <h3 className="mb-4 text-sm font-semibold text-[color:var(--ink)]">
           Opportunities by nation
         </h3>
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={nationData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1dcd4" />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" fill="#0d9488" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="#c94e2d" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
-      <div className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm">
-        <h3 className="mb-4 text-sm font-medium text-zinc-900">
+      <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-card)] p-4 shadow-[0_18px_40px_rgba(37,25,22,0.08)]">
+        <h3 className="mb-4 text-sm font-semibold text-[color:var(--ink)]">
           Publications (30 days)
         </h3>
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={timelineData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1dcd4" />
               <XAxis dataKey="day" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#0d9488"
+                stroke="#c94e2d"
                 strokeWidth={2}
                 dot={false}
               />
@@ -85,18 +85,23 @@ export function DashboardCharts({ stats }: { stats: Stats }) {
           </ResponsiveContainer>
         </div>
       </div>
-      <div className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm lg:col-span-2">
-        <h3 className="mb-4 text-sm font-medium text-zinc-900">
+      <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-card)] p-4 shadow-[0_18px_40px_rgba(37,25,22,0.08)] lg:col-span-2">
+        <h3 className="mb-4 text-sm font-semibold text-[color:var(--ink)]">
           Value distribution
         </h3>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={valueData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1dcd4" />
               <XAxis type="number" tick={{ fontSize: 11 }} />
-              <YAxis dataKey="bucket" type="category" width={100} tick={{ fontSize: 11 }} />
+              <YAxis
+                dataKey="bucket"
+                type="category"
+                width={100}
+                tick={{ fontSize: 11 }}
+              />
               <Tooltip />
-              <Bar dataKey="count" fill="#14b8a6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="count" fill="#d06145" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

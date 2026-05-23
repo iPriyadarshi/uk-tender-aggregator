@@ -36,11 +36,11 @@ export function OpportunityList({
 }) {
   if (opportunities.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 py-16 text-center">
-        <p className="text-sm font-medium text-zinc-700">
+      <div className="rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-raised)] py-16 text-center">
+        <p className="text-sm font-medium text-[color:var(--ink)]">
           No contracts match these filters
         </p>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-[color:var(--fg-secondary)]">
           Try clearing filters or run ingestion to load data.
         </p>
       </div>
@@ -49,14 +49,14 @@ export function OpportunityList({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-[color:var(--fg-secondary)]">
         Showing {opportunities.length} of {total.toLocaleString()} opportunities
         {page > 1 ? ` (page ${page})` : ""}
       </p>
       {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-sm md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-card)] shadow-[0_18px_40px_rgba(37,25,22,0.08)] md:block">
         <table className="w-full text-sm">
-          <thead className="border-b bg-zinc-50/80 text-left text-xs text-zinc-500">
+          <thead className="border-b border-[color:var(--border)] bg-[color:var(--surface-raised)] text-left text-[0.7rem] uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             <tr>
               <th className="px-4 py-3 font-medium">Title</th>
               <th className="px-4 py-3 font-medium">Buyer</th>
@@ -70,17 +70,17 @@ export function OpportunityList({
             {opportunities.map((o) => (
               <tr
                 key={o.id}
-                className="border-b last:border-0 hover:bg-zinc-50/50"
+                className="border-b border-[color:var(--border)] last:border-0 hover:bg-[color:var(--surface-raised)]/70"
               >
                 <td className="max-w-xs px-4 py-3">
                   <Link
                     href={`/opportunities/${o.id}`}
-                    className="font-medium text-zinc-900 hover:text-teal-700 line-clamp-2"
+                    className="font-medium text-[color:var(--ink)] hover:text-[color:var(--accent)] line-clamp-2"
                   >
                     {o.title}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-zinc-600">
+                <td className="px-4 py-3 text-[color:var(--fg-secondary)]">
                   {o.buyerName ?? "—"}
                 </td>
                 <td className="px-4 py-3">
@@ -94,7 +94,7 @@ export function OpportunityList({
                     o.valueCurrency ?? "GBP",
                   )}
                 </td>
-                <td className="px-4 py-3 text-zinc-600">
+                <td className="px-4 py-3 text-[color:var(--fg-secondary)]">
                   {o.deadlineAt ? formatDate(o.deadlineAt) : "—"}
                 </td>
                 <td className="px-4 py-3">
@@ -113,10 +113,14 @@ export function OpportunityList({
           <Link
             key={o.id}
             href={`/opportunities/${o.id}`}
-            className="block rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm"
+            className="block rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-card)] p-4 shadow-[0_18px_40px_rgba(37,25,22,0.08)]"
           >
-            <p className="font-medium text-zinc-900 line-clamp-2">{o.title}</p>
-            <p className="mt-1 text-sm text-zinc-500">{o.buyerName ?? "—"}</p>
+            <p className="font-medium text-[color:var(--ink)] line-clamp-2">
+              {o.title}
+            </p>
+            <p className="mt-1 text-sm text-[color:var(--fg-secondary)]">
+              {o.buyerName ?? "—"}
+            </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="outline">
                 {NATION_LABELS[o.nation] ?? o.nation}
@@ -124,14 +128,14 @@ export function OpportunityList({
               <Badge variant={STATUS_VARIANT[o.status] ?? "secondary"}>
                 {o.status}
               </Badge>
-              <span className="text-sm text-zinc-600">
+              <span className="text-sm text-[color:var(--fg-secondary)]">
                 {formatCurrency(
                   o.valueAmount ? Number(o.valueAmount) : null,
                   o.valueCurrency ?? "GBP",
                 )}
               </span>
               {o.deadlineAt && (
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-[color:var(--fg-secondary)]">
                   {formatDate(o.deadlineAt)}
                 </span>
               )}

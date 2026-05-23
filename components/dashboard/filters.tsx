@@ -29,22 +29,23 @@ export function DashboardFilters() {
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm">
+    <div className="space-y-4 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-card)] p-5 shadow-[0_18px_40px_rgba(37,25,22,0.08)]">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-500">
+          <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             Search
           </label>
           <Input
             placeholder="Title, buyer, keywords…"
             defaultValue={params.get("q") ?? ""}
             onKeyDown={(e) => {
-              if (e.key === "Enter") set("q", (e.target as HTMLInputElement).value);
+              if (e.key === "Enter")
+                set("q", (e.target as HTMLInputElement).value);
             }}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-500">
+          <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             Nation
           </label>
           <Select
@@ -65,7 +66,7 @@ export function DashboardFilters() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-500">
+          <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             Status
           </label>
           <Select
@@ -86,7 +87,7 @@ export function DashboardFilters() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-500">
+          <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             Buyer type
           </label>
           <Select
@@ -98,7 +99,9 @@ export function DashboardFilters() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All buyers</SelectItem>
-              <SelectItem value="central_government">Central government</SelectItem>
+              <SelectItem value="central_government">
+                Central government
+              </SelectItem>
               <SelectItem value="local_authority">Local authority</SelectItem>
               <SelectItem value="nhs">NHS</SelectItem>
               <SelectItem value="education">Education</SelectItem>
@@ -109,7 +112,7 @@ export function DashboardFilters() {
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-500">
+          <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             Industry sector
           </label>
           <Select
@@ -130,7 +133,7 @@ export function DashboardFilters() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-500">
+          <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             Min value (£)
           </label>
           <Input
@@ -141,7 +144,7 @@ export function DashboardFilters() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-500">
+          <label className="mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
             Max value (£)
           </label>
           <Input

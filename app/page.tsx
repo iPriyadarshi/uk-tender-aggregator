@@ -46,24 +46,29 @@ async function DashboardContent({
         <CardHeader>
           <CardTitle>Setup required</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-zinc-600">
+        <CardContent className="space-y-2 text-sm text-[color:var(--fg-secondary)]">
           <p>{dbError}</p>
           <ol className="list-decimal list-inside space-y-1">
             <li>Create a free Neon Postgres database</li>
             <li>
               Copy{" "}
-              <code className="rounded bg-zinc-100 px-1">.env.example</code> to{" "}
-              <code className="rounded bg-zinc-100 px-1">.env.local</code>
+              <code className="rounded bg-[color:var(--surface-raised)] px-1">
+                .env.example
+              </code>{" "}
+              to{" "}
+              <code className="rounded bg-[color:var(--surface-raised)] px-1">
+                .env.local
+              </code>
             </li>
             <li>
               Run{" "}
-              <code className="rounded bg-zinc-100 px-1">
+              <code className="rounded bg-[color:var(--surface-raised)] px-1">
                 npm run db:migrate
               </code>
             </li>
             <li>
               Run{" "}
-              <code className="rounded bg-zinc-100 px-1">
+              <code className="rounded bg-[color:var(--surface-raised)] px-1">
                 npm run ingest:backfill
               </code>
             </li>
@@ -132,9 +137,11 @@ async function DashboardContent({
 
 function MetricCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-card)] p-4 shadow-[0_18px_40px_rgba(37,25,22,0.08)]">
+      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--fg-secondary)]">
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-[color:var(--ink)]">
         {value.toLocaleString()}
       </p>
     </div>

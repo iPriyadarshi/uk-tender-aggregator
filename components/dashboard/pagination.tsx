@@ -34,7 +34,7 @@ export function Pagination({
       >
         Previous
       </Button>
-      <span className="text-sm text-zinc-500">
+      <span className="text-sm text-[color:var(--fg-secondary)]">
         Page {page} of {totalPages}
       </span>
       <Button
