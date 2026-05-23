@@ -14,7 +14,7 @@ export const ftsAdapter: SourceAdapter = {
       `${BASE}?limit=100&updatedFrom=${encodeURIComponent(window.from.toISOString())}&updatedTo=${encodeURIComponent(window.to.toISOString())}`;
     let pages = 0;
 
-    while (url && pages < 200) {
+    while (url && pages < 1000) {
       const pkg = await withBackoff(() =>
         fetchJson<OCDSReleasePackage & { links?: { next?: string } }>(url!),
       );
@@ -26,7 +26,7 @@ export const ftsAdapter: SourceAdapter = {
         (pkg as { links?: { next?: string } }).links?.next;
       url = next ?? null;
       pages++;
-      await sleep(800);
+      await sleep(1000);
     }
   },
 };

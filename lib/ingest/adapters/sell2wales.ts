@@ -17,14 +17,19 @@ export const sell2walesAdapter: SourceAdapter = {
     const months = enumerateMonths(window.from, window.to);
     for (const dateFrom of months) {
       for (const noticeType of NOTICE_TYPES) {
-        const url = `${API_BASE}?dateFrom=${dateFrom}&noticeType=${noticeType}&outputType=0&locale=2057`;
         try {
-          const pkg = await withBackoff(() =>
-            fetchJson<OCDSReleasePackage>(url),
+          const pkg = await fetchWithDateFromCandidates(dateFrom, noticeType);
+          // API returns OCDS ReleasePackage format with releases array
+          if (pkg && Array.isArray(pkg.releases) && pkg.releases.length > 0) {
+            yield pkg.releases;
+          } else {
+            console.log(`[sell2wales] No releases in package for ${dateFrom} type ${noticeType}`);
+          }
+        } catch (e) {
+          console.error(
+            `[sell2wales] Error fetching ${dateFrom} type ${noticeType}:`,
+            e,
           );
-          const releases = pkg.releases ?? [];
-          if (releases.length > 0) yield releases;
-        } catch {
           // API is flaky; try bulk JSON download fallback
           const fallback = await tryBulkDownload(dateFrom, noticeType);
           if (fallback.length > 0) yield fallback;
@@ -34,6 +39,33 @@ export const sell2walesAdapter: SourceAdapter = {
     }
   },
 };
+
+function buildDateFromCandidates(dateFrom: string): string[] {
+  // Official API format is MM-YYYY (e.g., 04-2019)
+  // dateFrom is already in MM-YYYY format from enumerateMonths
+  return [dateFrom];
+}
+
+async function fetchWithDateFromCandidates(
+  dateFrom: string,
+  noticeType: number,
+): Promise<OCDSReleasePackage> {
+  let lastError: unknown;
+  for (const candidate of buildDateFromCandidates(dateFrom)) {
+    const url = `${API_BASE}?dateFrom=${encodeURIComponent(candidate)}&noticeType=${noticeType}&outputType=0&locale=2057`;
+    console.log(`[sell2wales] GET ${url}`);
+    try {
+      return await withBackoff(() => fetchJson<OCDSReleasePackage>(url));
+    } catch (e) {
+      lastError = e;
+      console.warn(
+        `[sell2wales] Failed dateFrom=${candidate} type=${noticeType}:`,
+        e instanceof Error ? e.message : e,
+      );
+    }
+  }
+  throw lastError ?? new Error("Sell2Wales request failed");
+}
 
 function enumerateMonths(from: Date, to: Date): string[] {
   const months: string[] = [];
@@ -52,7 +84,10 @@ async function tryBulkDownload(
   noticeType: number,
 ): Promise<OCDSRelease[]> {
   try {
-    const [mm, yyyy] = dateFrom.split("-");
+    const parsed = parseMonthYear(dateFrom);
+    if (!parsed) return [];
+    const { mm, yyyy } = parsed;
+    
     const res = await ingestFetch(
       `${DOWNLOAD_BASE}?type=JSON&month=${mm}&year=${yyyy}&noticeType=${noticeType}`,
       {
@@ -62,10 +97,20 @@ async function tryBulkDownload(
     );
     if (!res.ok) return [];
     const data = await res.json();
+    // Handle both ReleasePackage and array formats
     if (Array.isArray(data)) return data as OCDSRelease[];
-    if (data.releases) return data.releases as OCDSRelease[];
+    if (data.releases && Array.isArray(data.releases)) return data.releases as OCDSRelease[];
     return [];
   } catch {
     return [];
   }
+}
+
+function parseMonthYear(dateFrom: string): { mm: string; yyyy: string } | null {
+  // Official format is MM-YYYY (e.g., 04-2019)
+  const [mm, yyyy] = dateFrom.split("-");
+  if (mm && yyyy && mm.length === 2 && yyyy.length === 4) {
+    return { mm, yyyy };
+  }
+  return null;
 }

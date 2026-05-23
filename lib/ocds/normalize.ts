@@ -82,14 +82,13 @@ function extractSourceUrl(release: OCDSRelease, source: Source): string | null {
   if (cfDoc?.url) return cfDoc.url;
 
   if (source === "contracts_finder" && release.id) {
-    return `https://www.contractsfinder.service.gov.uk/Notice/${release.id.split("-")[0]}`;
+    return `https://www.contractsfinder.service.gov.uk/Notice/${release.id}`;
   }
-  if (source === "fts" && release.ocid) {
-    return `https://www.find-tender.service.gov.uk/Notice/${release.ocid}`;
+  if (source === "fts" && release.id) {
+    return `https://www.find-tender.service.gov.uk/Notice/${release.id}`;
   }
   if (source === "pcs" && release.ocid) {
-    const id = release.ocid.replace("ocds-r6ebe6-", "");
-    return `https://www.publiccontractsscotland.gov.uk/search/show/search_view.aspx?ID=${id}`;
+    return `https://api.publiccontractsscotland.gov.uk/v1/Notice?id=${release.ocid}`;
   }
 
   return docs[0]?.url ?? null;
