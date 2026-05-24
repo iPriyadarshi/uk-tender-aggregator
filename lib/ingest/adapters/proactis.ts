@@ -79,7 +79,10 @@ function parseListing(html: string, window: IngestWindow): OCDSRelease[] {
     const tds = row.match(/<td[^>]*>[\s\S]*?<\/td>/gi) ?? [];
     if (tds.length < 2) continue;
 
-    const linkMatch = tds[0].match(
+    const firstCell = tds[0];
+    if (!firstCell) continue;
+
+    const linkMatch = firstCell.match(
       /<a[^>]+href="([^"]*\/Advert\?advertId=[^"]+)"[^>]*>([\s\S]*?)<\/a>/i,
     );
     if (!linkMatch) continue;
