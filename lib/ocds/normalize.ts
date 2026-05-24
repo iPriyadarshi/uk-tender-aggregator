@@ -44,8 +44,15 @@ export interface NormalizedBuyer {
 
 function parseDate(v?: string): Date | null {
   if (!v) return null;
-  const d = new Date(v);
-  return isNaN(d.getTime()) ? null : d;
+  const value = v.trim();
+  if (!value) return null;
+
+  const hasTimezone = /[zZ]|[+-]\d{2}(:?\d{2})?$/.test(value);
+  const normalized = hasTimezone ? value : `${value}Z`;
+  const d = new Date(normalized);
+  if (isNaN(d.getTime())) return null;
+
+  return new Date(d.toISOString());
 }
 
 function extractValue(release: OCDSRelease) {

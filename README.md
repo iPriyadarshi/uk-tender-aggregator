@@ -81,8 +81,8 @@ See [docs/coverage.md](docs/coverage.md).
 
 | Field      | Notes                                          |
 | ---------- | ---------------------------------------------- |
-| `id`       | `sha256(source:ocid:releaseId)`                |
-| Dates      | ISO 8601 UTC timestamps                        |
+| `id`       | `sha256(source:ocid:releaseId)` (first 32 hex) |
+| Dates      | ISO 8601 UTC timestamps (normalized to UTC)    |
 | Values     | Numeric + ISO 4217 currency                    |
 | `nation`   | england, scotland, wales, northern_ireland, uk |
 | `raw_ocds` | Full release JSONB for audit                   |
