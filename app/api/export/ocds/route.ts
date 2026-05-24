@@ -5,7 +5,6 @@ import { queryOpportunities } from "@/lib/api/query-opportunities";
 /** Stretch: export filtered opportunities as OCDS release package */
 export const dynamic = "force-dynamic";
 
-/*
 async function fetchAllOpportunities(
   filters: ReturnType<typeof opportunityFiltersSchema.parse>,
 ) {
@@ -26,7 +25,6 @@ async function fetchAllOpportunities(
 
   return all;
 }
-*/
 
 function toCsvValue(value: unknown): string {
   if (value == null) return "";
@@ -53,11 +51,11 @@ export async function GET(req: NextRequest) {
     const filters = opportunityFiltersSchema.parse({
       ...params,
       page: 1,
-      pageSize: 500,
-      // pageSize: 1,
+      // pageSize: 500,
+      pageSize: 1,
     });
-    const { data } = await queryOpportunities(filters);
-    // const data = await fetchAllOpportunities(filters);
+    // const { data } = await queryOpportunities(filters);
+    const data = await fetchAllOpportunities(filters);
 
     if (format === "csv") {
       const headers = [
