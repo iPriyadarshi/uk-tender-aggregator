@@ -23,6 +23,17 @@
 2. **Sell2Wales:** HTML changes can break the scrape; no stable API available.
 3. **Council portals (In-Tend, Delta):** Opportunities appear on FTS/CF first; direct portal scrape not required for core scope (stretch: metadata enrichment via notice links).
 
+### Council portal limitations
+
+| Portal                        | Common use by councils              | Limitation                                                            | Impact on coverage                            |
+| ----------------------------- | ----------------------------------- | --------------------------------------------------------------------- | --------------------------------------------- |
+| In-Tend                       | Many English local authorities      | Requires account for full detail; inconsistent public list metadata   | Only public summaries available without login |
+| Delta eSourcing               | Scottish councils, some English     | Session-based access; public listings lack stable IDs                 | Hard to dedupe; may miss attachments          |
+| ProContract (Council variant) | Some councils, housing associations | Often mirrors FTS/CF notices; portal structure varies by tenant       | Not required for core scope; enrichment only  |
+| The Chest                     | North West councils                 | Public list is thin; attachments often gated behind login             | Limited fields; no direct doc ingest          |
+| YORtender                     | Yorkshire councils                  | Robot rules frequently block; HTML layout changes across tenant sites | Scrape break risk; fallback to FTS/CF         |
+| Tenderbase                    | Cheshire East Council               | Requires signup                                                       | Not required for core scope; enrichment only  |
+
 ## Deduplication priority
 
 When the same `ocid` appears in multiple sources: FTS > PCS/Sell2Wales > eTendersNI > Contracts Finder.
