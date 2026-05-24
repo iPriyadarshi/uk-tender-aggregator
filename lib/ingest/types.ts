@@ -19,4 +19,5 @@ export const SOURCE_PRIORITY: Record<Source, number> = {
   sell2wales: 80,
   etenders_ni: 70,
   contracts_finder: 50,
+  proactis: 60,
 };

@@ -60,6 +60,7 @@ export function resolveNation(release: OCDSRelease, source: Source): Nation {
     etenders_ni: "northern_ireland",
     contracts_finder: "england",
     fts: "uk",
+    proactis: "england",
   };
 
   const fromBuyer = buyerNation(release);

@@ -1,7 +1,6 @@
 import type { OCDSRelease } from "@/lib/ocds/types";
 import type { IngestWindow, SourceAdapter } from "../types";
 
-import { chromium } from "playwright";
 import { Solver } from "@2captcha/captcha-solver";
 
 import { isAllowedByRobots } from "../robots";
@@ -11,6 +10,18 @@ const START_URL =
   "https://etendersni.gov.uk/epps/prepareCurrentOpportunities.do?currentType=cft";
 
 const solver = new Solver(process.env.TWOCAPTCHA_API_KEY!);
+
+type ChromiumType = typeof import("playwright").chromium;
+
+let chromiumLoader: Promise<ChromiumType> | null = null;
+
+async function getChromium() {
+  if (!chromiumLoader) {
+    chromiumLoader = import("playwright").then((mod) => mod.chromium);
+  }
+
+  return chromiumLoader;
+}
 
 export const etendersNiAdapter: SourceAdapter = {
   source: "etenders_ni",
@@ -28,8 +39,19 @@ export const etendersNiAdapter: SourceAdapter = {
     const releases: OCDSRelease[] = [];
 
     let browser;
+    let chromium;
 
     try {
+      try {
+        chromium = await getChromium();
+      } catch (e) {
+        console.warn(
+          "Playwright not available; skipping eTendersNI scrape:",
+          e,
+        );
+        return;
+      }
+
       browser = await chromium.launch({
         headless: true,
       });
@@ -75,7 +97,7 @@ export const etendersNiAdapter: SourceAdapter = {
         // Inject token
         await page.evaluate((token) => {
           const textarea = document.getElementById(
-            "g-recaptcha-response"
+            "g-recaptcha-response",
           ) as HTMLTextAreaElement | null;
 
           if (textarea) {
@@ -84,7 +106,7 @@ export const etendersNiAdapter: SourceAdapter = {
 
           // Some sites keep it hidden
           const hidden = document.querySelector(
-            '[name="g-recaptcha-response"]'
+            '[name="g-recaptcha-response"]',
           ) as HTMLTextAreaElement | null;
 
           if (hidden) {
@@ -99,11 +121,7 @@ export const etendersNiAdapter: SourceAdapter = {
           for (const key in win) {
             const value = win[key];
 
-            if (
-              typeof value === "object" &&
-              value &&
-              value.callback
-            ) {
+            if (typeof value === "object" && value && value.callback) {
               try {
                 value.callback();
               } catch {}

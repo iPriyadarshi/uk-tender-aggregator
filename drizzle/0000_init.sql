@@ -1,5 +1,5 @@
 CREATE TYPE "public"."nation" AS ENUM('england', 'scotland', 'wales', 'northern_ireland', 'uk');--> statement-breakpoint
-CREATE TYPE "public"."source" AS ENUM('fts', 'contracts_finder', 'pcs', 'sell2wales', 'etenders_ni');--> statement-breakpoint
+CREATE TYPE "public"."source" AS ENUM('fts', 'contracts_finder', 'pcs', 'sell2wales', 'etenders_ni', 'proactis');--> statement-breakpoint
 CREATE TYPE "public"."opportunity_status" AS ENUM('planning', 'active', 'award', 'complete', 'cancelled', 'unknown');--> statement-breakpoint
 CREATE TABLE "buyers" (
 	"id" text PRIMARY KEY NOT NULL,

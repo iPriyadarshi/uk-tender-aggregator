@@ -22,6 +22,7 @@ export const sourceEnum = pgEnum("source", [
   "pcs",
   "sell2wales",
   "etenders_ni",
+  "proactis",
 ]);
 
 export const nationEnum = pgEnum("nation", [

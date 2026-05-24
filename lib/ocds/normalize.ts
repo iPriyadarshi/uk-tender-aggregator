@@ -77,7 +77,8 @@ function extractSourceUrl(release: OCDSRelease, source: Source): string | null {
       d.url?.includes("find-tender") ||
       d.url?.includes("publiccontractsscotland") ||
       d.url?.includes("sell2wales") ||
-      d.url?.includes("etendersni"),
+      d.url?.includes("etendersni") ||
+      d.url?.includes("procontract.due-north.com"),
   );
   if (cfDoc?.url) return cfDoc.url;
 
