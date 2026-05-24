@@ -11,6 +11,7 @@ flowchart LR
   PCS[Public Contracts Scotland] --> Norm
   S2W[Sell2Wales] --> Norm
   NI[eTendersNI scrape] --> Norm
+  PRO[Proactis scrape] --> Norm
   Norm --> PG[(Postgres / Neon)]
   PG --> API[Next.js API]
   API --> UI[Dashboard]
@@ -22,7 +23,7 @@ flowchart LR
 - **Frontend:** Next.js 16, React 19, TypeScript, Tailwind, shadcn-style components, Recharts
 - **Backend:** Next.js API routes (monolith)
 - **Database:** Postgres via Neon + Drizzle ORM
-- **Ingestion:** OCDS APIs (FTS, Contracts Finder, PCS) + HTML scrape (Sell2Wales, eTendersNI)
+- **Ingestion:** OCDS APIs (FTS, Contracts Finder, PCS) + HTML scrape (Sell2Wales, eTendersNI, Proactis)
 
 ## Quick start
 
@@ -74,6 +75,7 @@ See [docs/coverage.md](docs/coverage.md).
 | Public Contracts Scotland | Scotland                  | OCDS `/v1/Notices`                   |
 | Sell2Wales                | Wales                     | HTML scrape (robots.txt respected)   |
 | eTendersNI                | Northern Ireland          | Playwright scrape + optional CAPTCHA |
+| Proactis (ProContract)    | England                   | HTML scrape (robots.txt respected)   |
 
 ## Unified schema
 
@@ -91,7 +93,7 @@ See [docs/coverage.md](docs/coverage.md).
 | --------------------------------------- | ----------------------------------------- |
 | `GET /api/opportunities`                | List all opportunities in json format     |
 | `GET /api/opportunities/:id`            | Detail of opportunity with specified `id` |
-| `GET /api/stats`                        | Dashboard aggregates stats                      |
+| `GET /api/stats`                        | Dashboard aggregates stats                |
 | `GET /api/export/ocds?format=csv\|json` | CSV export or OCDS release package export |
 | `GET /api/cron/ingest?days=1`           | Daily ingestion (Bearer `CRON_SECRET`)    |
 | `GET /api/health`                       | DB connectivity                           |
