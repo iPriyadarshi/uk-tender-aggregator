@@ -19,17 +19,17 @@ flowchart LR
 
 ## Stack
 
-- **Frontend:** Next.js 14, TypeScript, Tailwind, shadcn-style components, Recharts
+- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind, shadcn-style components, Recharts
 - **Backend:** Next.js API routes (monolith)
 - **Database:** Postgres via Neon + Drizzle ORM
-- **Ingestion:** OCDS APIs (FTS, Contracts Finder, PCS, Sell2Wales) + HTML scrape (eTendersNI)
+- **Ingestion:** OCDS APIs (FTS, Contracts Finder, PCS) + HTML scrape (Sell2Wales, eTendersNI)
 
 ## Quick start
 
 ```bash
-cd uk-gov-contracts
+cd uk-tender-aggregator
 cp .env.example .env.local
-# Set DATABASE_URL (Neon) and CRON_SECRET
+# Set DATABASE_URL and CRON_SECRET (plus TWOCAPTCHA_API_KEY if using eTendersNI)
 
 npm install
 npm run db:migrate
@@ -45,19 +45,35 @@ Open [http://localhost:3000](http://localhost:3000).
 npm run ingest:fts
 npm run ingest:cf
 npm run ingest:backfill -- --days=30 --sources=pcs,sell2wales
+npm run ingest:once
+```
+
+### Environment variables
+
+- `DATABASE_URL`: Postgres connection string (Neon or local)
+- `CRON_SECRET`: Bearer token for the cron ingest endpoint
+- `NEXT_PUBLIC_APP_URL`: Public base URL (used in user agent contact)
+- `SCRAPER_USER_AGENT`: Optional custom user agent for scrapers
+- `INGEST_TLS_SKIP_VERIFY`: Set true if PCS/Sell2Wales TLS fails locally
+- `TWOCAPTCHA_API_KEY`: Optional, required to solve eTendersNI CAPTCHA
+
+If you run eTendersNI ingestion locally, install Playwright browsers once:
+
+```bash
+npx playwright install
 ```
 
 ## Portal coverage
 
 See [docs/coverage.md](docs/coverage.md).
 
-| Source                    | Nation                    | Method                                  |
-| ------------------------- | ------------------------- | --------------------------------------- |
-| Find a Tender             | UK-wide                   | OCDS release packages API               |
-| Contracts Finder          | England / below-threshold | OCDS search API (cursor)                |
-| Public Contracts Scotland | Scotland                  | OCDS `/v1/Notices`                      |
-| Sell2Wales                | Wales                     | OCDS API + bulk download fallback       |
-| eTendersNI                | Northern Ireland          | Public HTML list (robots.txt respected) |
+| Source                    | Nation                    | Method                               |
+| ------------------------- | ------------------------- | ------------------------------------ |
+| Find a Tender             | UK-wide                   | OCDS release packages API            |
+| Contracts Finder          | England / below-threshold | OCDS search API (cursor)             |
+| Public Contracts Scotland | Scotland                  | OCDS `/v1/Notices`                   |
+| Sell2Wales                | Wales                     | HTML scrape (robots.txt respected)   |
+| eTendersNI                | Northern Ireland          | Playwright scrape + optional CAPTCHA |
 
 ## Unified schema
 
@@ -71,15 +87,19 @@ See [docs/coverage.md](docs/coverage.md).
 
 ## API
 
-| Endpoint                           | Description                            |
-| ---------------------------------- | -------------------------------------- |
-| `GET /api/opportunities`           | List with filters                      |
-| `GET /api/opportunities/:id`       | Detail                                 |
-| `GET /api/stats`                   | Chart aggregates                       |
-| `GET /api/export?format=csv\|json` | Filtered export                        |
-| `GET /api/export/ocds`             | OCDS release package export (stretch)  |
-| `GET /api/cron/ingest`             | Daily ingestion (Bearer `CRON_SECRET`) |
-| `GET /api/health`                  | DB connectivity                        |
+| Endpoint                                | Description                               |
+| --------------------------------------- | ----------------------------------------- |
+| `GET /api/opportunities`                | List all opportunities in json format     |
+| `GET /api/opportunities/:id`            | Detail of opportunity with specified `id` |
+| `GET /api/stats`                        | Dashboard aggregates stats                      |
+| `GET /api/export/ocds?format=csv\|json` | CSV export or OCDS release package export |
+| `GET /api/cron/ingest?days=1`           | Daily ingestion (Bearer `CRON_SECRET`)    |
+| `GET /api/health`                       | DB connectivity                           |
+
+### Filter params
+
+`/api/opportunities` supports: `q`, `nation`, `status`, `buyerType`, `industry`,
+`valueMin`, `valueMax`, `deadlineFrom`, `deadlineTo`, `page`, `pageSize`, `sort`, `order`.
 
 ## AI usage
 

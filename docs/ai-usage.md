@@ -1,6 +1,6 @@
 # AI usage notes
 
-Tools: **Cursor** (Claude), architecture from trial brief.
+Tools: **Cursor**, **GitHub Copilot**.
 
 ## Prompts that produced real output
 
