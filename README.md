@@ -15,22 +15,22 @@ flowchart LR
   Norm --> PG[(Postgres / Neon)]
   PG --> API[Next.js API]
   API --> UI[Dashboard]
-  Cron[Vercel Cron daily] --> Norm
+  GHA[GitHub Actions daily] --> Norm
 ```
 
 ## Stack
 
 - **Frontend:** Next.js 16, React 19, TypeScript, Tailwind, shadcn-style components, Recharts
-- **Backend:** Next.js API routes (monolith)
+- **Backend:** Next.js read APIs + dashboard (deployed on Vercel)
 - **Database:** Postgres via Neon + Drizzle ORM
-- **Ingestion:** OCDS APIs (FTS, Contracts Finder, PCS) + HTML scrape (Sell2Wales, eTendersNI, Proactis)
+- **Ingestion:** standalone Node pipeline (`scripts/backfill.ts`) run via GitHub Actions — OCDS APIs (FTS, Contracts Finder, PCS) + HTTP scrape (Sell2Wales, Proactis, and eTendersNI with a self-hosted OCR CAPTCHA solver)
 
 ## Quick start
 
 ```bash
 cd uk-tender-aggregator
 cp .env.example .env.local
-# Set DATABASE_URL and CRON_SECRET (plus TWOCAPTCHA_API_KEY if using eTendersNI)
+# Set DATABASE_URL
 
 npm install
 npm run db:migrate
@@ -52,17 +52,26 @@ npm run ingest:once
 ### Environment variables
 
 - `DATABASE_URL`: Postgres connection string (Neon or local)
-- `CRON_SECRET`: Bearer token for the cron ingest endpoint
 - `NEXT_PUBLIC_APP_URL`: Public base URL (used in user agent contact)
 - `SCRAPER_USER_AGENT`: Optional custom user agent for scrapers
 - `INGEST_TLS_SKIP_VERIFY`: Set true if PCS/Sell2Wales TLS fails locally
-- `TWOCAPTCHA_API_KEY`: Optional, required to solve eTendersNI CAPTCHA
+- `ETENDERS_CAPTCHA_ATTEMPTS`: Optional, max OCR retry attempts for the eTendersNI CAPTCHA (default 25)
 
-If you run eTendersNI ingestion locally, install Playwright browsers once:
+The eTendersNI image CAPTCHA is solved by our own OCR solver
+([lib/ingest/captcha.ts](lib/ingest/captcha.ts), Tesseract + preprocessing + retry) —
+no third-party CAPTCHA service or headless browser required.
 
-```bash
-npx playwright install
-```
+## Ingestion / scheduling
+
+All ingestion runs in **GitHub Actions** ([.github/workflows/ingest.yml](.github/workflows/ingest.yml)),
+calling `scripts/backfill.ts` directly against the database — the deployed Vercel
+app serves only the dashboard and read APIs.
+
+- **Scheduled:** daily at 03:00 UTC.
+- **Manual / on-demand:** trigger the workflow with **Run workflow** (`workflow_dispatch`),
+  with optional `days` and `sources` inputs.
+- **Setup:** add the repo secret `DATABASE_URL` (Actions → Secrets). Locally you
+  can still run `npm run ingest:backfill` against your own `DATABASE_URL`.
 
 ## Portal coverage
 
@@ -74,7 +83,7 @@ See [docs/coverage.md](docs/coverage.md).
 | Contracts Finder          | England / below-threshold | OCDS search API (cursor)             |
 | Public Contracts Scotland | Scotland                  | OCDS `/v1/Notices`                   |
 | Sell2Wales                | Wales                     | HTML scrape (robots.txt respected)   |
-| eTendersNI                | Northern Ireland          | Playwright scrape + optional CAPTCHA |
+| eTendersNI                | Northern Ireland          | HTTP scrape + self-hosted OCR CAPTCHA |
 | Proactis (ProContract)    | England                   | HTML scrape (robots.txt respected)   |
 
 ## Unified schema
@@ -168,7 +177,6 @@ All timestamps are stored as `timestamp with time zone` and normalized to ISO 86
 | `GET /api/opportunities/:id`            | Detail of opportunity with specified `id` |
 | `GET /api/stats`                        | Dashboard aggregates stats                |
 | `GET /api/export/ocds?format=csv\|json` | CSV export or OCDS release package export |
-| `GET /api/cron/ingest?days=1`           | Daily ingestion (Bearer `CRON_SECRET`)    |
 | `GET /api/health`                       | DB connectivity                           |
 
 ### Filter params

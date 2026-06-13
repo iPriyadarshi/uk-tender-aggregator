@@ -22,12 +22,12 @@
 | contracts_finder | 3617    | 3617     | Completed                                 |
 | pcs              | 172     | 172      | Completed                                 |
 | sell2wales       | 10      | 10       | Completed                                 |
-| etenders_ni      | 0       | 0        | Failed due to absence of 2Captcha API key |
+| etenders_ni      | 0       | 0        | Now scraped via EPPS HTTP + self-hosted OCR CAPTCHA (re-run to populate) |
 
 ## Freshness
 
-- Daily cron: `0 3 * * *` UTC -> `GET /api/cron/ingest?days=1`
-- Incremental overlap: 1-day window prevents gaps
+- Daily GitHub Actions schedule: `0 3 * * *` UTC -> `scripts/backfill.ts --days=2`
+- Incremental overlap: 2-day window prevents gaps between daily runs
 - Ingestion history: query `ingestion_runs` or view `stats.ingestion` from `/api/stats`
 
 ## Data quality checks

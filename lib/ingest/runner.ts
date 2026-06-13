@@ -14,13 +14,33 @@ export function registerAdapter(adapter: SourceAdapter) {
   adapters.push(adapter);
 }
 
+export interface RunOptions {
+  /**
+   * Epoch ms after which ingestion stops gracefully: we finalize the current
+   * run row and stop instead of risking a hard kill (e.g. a CI job timeout)
+   * that would leave the row stuck on "running". Optional; omit to run unbounded.
+   */
+  deadlineMs?: number;
+}
+
 export async function runIngestion(
   sources?: Source[],
   window?: IngestWindow,
+  opts?: RunOptions,
 ): Promise<
   Record<Source, { fetched: number; upserted: number; errors: string[] }>
 > {
   const db = getDb();
+
+  // Reconcile rows orphaned by a previous invocation that was killed mid-run
+  // (a serverless timeout SIGKILLs the process, skipping the finally/catch
+  // finalizers, so the row stays on "running" forever). Clear those first.
+  await db.execute(sql`
+    UPDATE ingestion_runs
+    SET status = 'timed_out', finished_at = now()
+    WHERE status = 'running' AND started_at < now() - interval '10 minutes'
+  `);
+
   const to = window?.to ?? new Date();
   const from =
     window?.from ?? new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -35,7 +55,10 @@ export async function runIngestion(
     ? adapters.filter((a) => sources.includes(a.source))
     : adapters;
 
+  let stopped = false;
+
   for (const adapter of selected) {
+    if (stopped) break;
     const runRecordId = runId(adapter.source);
     const errors: string[] = [];
     let fetched = 0;
@@ -67,6 +90,14 @@ export async function runIngestion(
               error: msg,
             });
           }
+        }
+
+        if (opts?.deadlineMs && Date.now() >= opts.deadlineMs) {
+          stopped = true;
+          errors.push(
+            "Stopped early: serverless time budget reached before source completed",
+          );
+          break;
         }
       }
 

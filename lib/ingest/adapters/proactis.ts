@@ -20,8 +20,9 @@ export const proactisAdapter: SourceAdapter = {
     let url: string | null = START_URL;
     let page = 1;
     let cookies = "";
+    let emptyStreak = 0;
 
-    while (url && page <= 200) {
+    while (url && page <= 50) {
       let html = "";
       try {
         const res = await fetchPage(url, cookies);
@@ -33,7 +34,13 @@ export const proactisAdapter: SourceAdapter = {
       }
 
       const releases = parseListing(html, window);
-      if (releases.length > 0) yield releases;
+      if (releases.length > 0) {
+        yield releases;
+        emptyStreak = 0;
+      } else if (++emptyStreak >= 2) {
+        // Two consecutive pages with nothing in-window: stop paging.
+        break;
+      }
 
       const next = extractNextUrl(html, url);
       if (!next || next === url) break;
