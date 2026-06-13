@@ -27,11 +27,11 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          # >= 22.15 is required for the --use-system-ca flag used below.
-          node-version: 22
+          # Node 24 (>= 22.15 required for the --use-system-ca flag used below).
+          node-version: 24
           cache: npm
       - run: npm ci
       - name: Run ingestion
