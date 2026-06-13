@@ -1,0 +1,42 @@
+name: Ingest tenders
+
+# Reliable ingestion runner. Vercel Hobby caps functions at 60s, which is far
+# too short to scrape all sources, so the daily ingest runs here instead.
+# Configure repo secret: DATABASE_URL (Neon). The eTendersNI CAPTCHA is solved
+# by our own OCR (lib/ingest/captcha.ts) — no third-party CAPTCHA service.
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Lookback window in days"
+        default: "2"
+      sources:
+        description: "Comma-separated sources (blank = all)"
+        default: ""
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run ingestion
+        run: |
+          ARGS="--days=${{ github.event.inputs.days || '2' }}"
+          if [ -n "${{ github.event.inputs.sources }}" ]; then
+            ARGS="$ARGS --sources=${{ github.event.inputs.sources }}"
+          fi
+          node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/backfill.ts $ARGS

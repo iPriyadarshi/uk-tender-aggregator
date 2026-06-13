@@ -36,7 +36,20 @@ async function main() {
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
 
+  console.log(
+    `Ingesting ${sources ? sources.join(", ") : "all sources"} for the last ${days} day(s)...`,
+  );
   const results = await runIngestion(sources, { from, to });
+
+  let totalUpserted = 0;
+  for (const [source, r] of Object.entries(results)) {
+    totalUpserted += r.upserted;
+    const errs = r.errors.length ? ` (${r.errors.length} errors)` : "";
+    console.log(
+      `  ${source}: fetched ${r.fetched}, upserted ${r.upserted}${errs}`,
+    );
+  }
+  console.log(`Done. ${totalUpserted} records upserted.`);
 }
 
 main().catch((e) => {

@@ -29,9 +29,17 @@ export const sell2walesAdapter: SourceAdapter = {
       return;
     }
 
-    while (html && page <= 1000) {
+    let emptyStreak = 0;
+    while (html && page <= 50) {
       const releases = parseSearchHtml(html, window);
-      if (releases.length > 0) yield releases;
+      if (releases.length > 0) {
+        yield releases;
+        emptyStreak = 0;
+      } else if (++emptyStreak >= 2) {
+        // Two consecutive pages with nothing in-window: results are sorted
+        // newest-first, so we've paged past the window. Stop.
+        break;
+      }
 
       const next = extractNextPageState(html);
       if (!next || next.disabled || !next.eventTarget) break;

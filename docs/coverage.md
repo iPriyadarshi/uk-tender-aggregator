@@ -8,7 +8,7 @@
 | Contracts Finder          | contractsfinder.service.gov.uk | England          | Implemented | OCDS search with cursor pagination                     |
 | Public Contracts Scotland | publiccontractsscotland.gov.uk | Scotland         | Implemented | Monthly `dateFrom=MM-YYYY` batches                     |
 | Sell2Wales                | sell2wales.gov.wales           | Wales            | Implemented | HTML scrape; robots.txt respected                      |
-| eTendersNI                | etendersni.gov.uk              | Northern Ireland | Implemented | Playwright scrape; optional 2Captcha via env key       |
+| eTendersNI                | etendersni.gov.uk              | Northern Ireland | Implemented | HTTP scrape (EPPS); image CAPTCHA solved by self-hosted OCR |
 | Proactis (ProContract)    | procontract.due-north.com      | England          | Implemented | HTML scrape; robots.txt respected                      |
 
 ## Threshold coverage
@@ -19,7 +19,7 @@
 
 ## Known limitations
 
-1. **eTendersNI:** We ingest list metadata only; CAPTCHA solving requires `TWOCAPTCHA_API_KEY` and does not bypass login.
+1. **eTendersNI:** We ingest public list metadata only (no login). The search is gated by a text-image CAPTCHA solved in-house via OCR (`lib/ingest/captcha.ts`) with a refresh-and-retry loop — no third-party CAPTCHA service.
 2. **Sell2Wales:** HTML changes can break the scrape; no stable API available.
 3. **Council portals (In-Tend, Delta):** Opportunities appear on FTS/CF first; direct portal scrape not required for core scope (stretch: metadata enrichment via notice links).
 
