@@ -30,7 +30,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # >= 22.15 is required for the --use-system-ca flag used below.
+          node-version: 22
           cache: npm
       - run: npm ci
       - name: Run ingestion
