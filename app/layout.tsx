@@ -39,31 +39,31 @@ export default function RootLayout({
               </div>
             </div>
 
-            <nav className="flex flex-wrap items-center gap-2">
+            <nav className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <a
                 href="/api/export/ocds"
-                className="group inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--fg-secondary)] transition-all hover:border-[color:var(--accent)] hover:text-[color:var(--ink)]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--fg-secondary)] transition-all hover:border-[color:var(--accent)] hover:text-[color:var(--ink)]"
               >
-                <FileDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+                <FileDown className="h-4 w-4 shrink-0 transition-transform group-hover:translate-y-0.5" />
                 <span className="hidden sm:inline">Export JSON</span>
                 <span className="sm:hidden">JSON</span>
               </a>
 
               <a
                 href="/api/export/ocds?format=csv"
-                className="group inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--fg-secondary)] transition-all hover:border-[color:var(--accent)] hover:text-[color:var(--ink)]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--fg-secondary)] transition-all hover:border-[color:var(--accent)] hover:text-[color:var(--ink)]"
               >
-                <FileDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+                <FileDown className="h-4 w-4 shrink-0 transition-transform group-hover:translate-y-0.5" />
                 <span className="hidden sm:inline">Export CSV</span>
-                <span className="sm:hidden">Export</span>
+                <span className="sm:hidden">CSV</span>
               </a>
 
               <a
                 href="/api/health"
-                className="group inline-flex items-center gap-2 rounded-full border border-transparent bg-[color:var(--accent)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--accent-foreground)] shadow-[0_14px_30px_rgba(201,78,45,0.25)] transition-all hover:-translate-y-0.5"
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-[color:var(--accent)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--accent-foreground)] shadow-[0_14px_30px_rgba(201,78,45,0.25)] transition-all hover:-translate-y-0.5"
               >
-                <Activity className="h-4 w-4 transition-transform group-hover:scale-110" />
-                <span className="hidden sm:inline">Health</span>
+                <Activity className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+                <span>Health</span>
               </a>
             </nav>
           </div>

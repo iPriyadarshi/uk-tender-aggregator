@@ -159,11 +159,14 @@ export async function getStats() {
         FROM opportunities
         GROUP BY 1
       `),
+      // Latest run per source, so every configured source is represented.
       db
-        .select()
+        .selectDistinctOn([schema.ingestionRuns.source])
         .from(schema.ingestionRuns)
-        .orderBy(desc(schema.ingestionRuns.startedAt))
-        .limit(10),
+        .orderBy(
+          schema.ingestionRuns.source,
+          desc(schema.ingestionRuns.startedAt),
+        ),
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(schema.opportunities),
